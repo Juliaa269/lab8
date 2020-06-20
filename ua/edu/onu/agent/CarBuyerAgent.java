@@ -9,21 +9,39 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import ua.edu.onu.agent.CarMarketAgent;
 import ua.edu.onu.util.ConsoleColors;
 import ua.edu.onu.util.Gateway;
 
 public class CarBuyerAgent extends CarMarketAgent {
     private AID[] sellerAgents;
 
+    private void setup(Object[] arguments) {
+        if(arguments == null || arguments.length == 0) {
+            // Make the agent terminate
+            log("No target car mileage specified");
+            doDelete();
+        } else {
+            String[] args = ((String) arguments[0]).split(" ");
+            setMileage(Integer.parseInt(args[0]));
+            log("Target car mileage is " + getMileage());
+        }
+    }
+
     protected void setup() {
         this.color = ConsoleColors.YELLOW;
         setup(getArguments());
 
         // Add a TickerBehaviour that schedules a request to seller agents every minute
-        addBehaviour(new TickerBehaviour(this, 1099) {
+        addBehaviour(getTicker());
+
+        Gateway.getInstance().append(this);
+
+    }
+
+    private TickerBehaviour getTicker() {
+        return new TickerBehaviour(this, 10990) {
             protected void onTick() {
-                log("Trying to buy " + getMilleage());
+                log("Trying to buy " + getMileage());
                 // Update the list of seller agents
                 DFAgentDescription template = new DFAgentDescription();
                 ServiceDescription sd = new ServiceDescription();
@@ -44,21 +62,12 @@ public class CarBuyerAgent extends CarMarketAgent {
                 // Perform the request
                 myAgent.addBehaviour(new RequestPerformer());
             }
-        });
-
-        Gateway.getInstance().append(this);
-
+        };
     }
-
-    // Put agent clean-up operations here
 
     protected void takeDown() {
         // Printout a dismissal message
         log("Buyer-agent " + getAID().getName() + " terminating.");
-    }
-
-    public void updateCatalogue(String title, int parseInt) {
-
     }
 
     /**
@@ -82,7 +91,7 @@ public class CarBuyerAgent extends CarMarketAgent {
                     for (int i = 0; i < sellerAgents.length; ++i) {
                         cfp.addReceiver(sellerAgents[i]);
                     }
-                    cfp.setContent(String.valueOf(getMilleage()));
+                    cfp.setContent(String.valueOf(getMileage()));
                     cfp.setConversationId("car-trade");
                     cfp.setReplyWith("cfp" + System.currentTimeMillis()); // Unique value
                     myAgent.send(cfp);
@@ -118,7 +127,7 @@ public class CarBuyerAgent extends CarMarketAgent {
                     // Send the purchase order to the seller that provided the best offer
                     ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
                     order.addReceiver(bestSeller);
-                    order.setContent(String.valueOf(getMilleage()));
+                    order.setContent(String.valueOf(getMileage()));
                     order.setConversationId("car-trade");
                     order.setReplyWith("order" + System.currentTimeMillis());
                     myAgent.send(order);
@@ -134,8 +143,9 @@ public class CarBuyerAgent extends CarMarketAgent {
                         // Purchase order reply received
                         if (reply.getPerformative() == ACLMessage.INFORM) {
                             // Purchase successful. We can terminate
-                            log(getMilleage() + " successfully purchased from agent " + reply.getSender().getName());
+                            log(getMileage() + " successfully purchased from agent " + reply.getSender().getName());
                             log("Price = " + bestPrice);
+                            ((CarMarketAgent)myAgent).closeDeal(reply.getSender().getLocalName(), bestPrice);
                             myAgent.doDelete();
                         } else {
                             log("Attempt failed: requested car already sold.");
@@ -151,7 +161,7 @@ public class CarBuyerAgent extends CarMarketAgent {
 
         public boolean done() {
             if (step == 2 && bestSeller == null) {
-                log("Attempt failed: " + getMilleage() + " not available for sale");
+                log("Attempt failed: " + getMileage() + " not available for sale");
             }
             return ((step == 2 && bestSeller == null) || step == 4);
         }

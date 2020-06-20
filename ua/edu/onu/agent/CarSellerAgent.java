@@ -1,30 +1,25 @@
-package ua.edu.onu.agent.sellers;
+package ua.edu.onu.agent;
 
 import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import ua.edu.onu.agent.CarMarketAgent;
 import ua.edu.onu.util.ConsoleColors;
-import ua.edu.onu.util.Gateway;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class CarSellerAgent extends CarMarketAgent {
+    private Map<String, Integer> catalogue = new LinkedHashMap<>();
+    private CarSellerGui gui;
 
     protected void setup() {
         this.color = ConsoleColors.GREEN;
-        setup(getArguments());
+        DFAgentDescription dfd = createDescription();
 
-        // Register the car-selling service in the yellow pages
-        DFAgentDescription dfd = new DFAgentDescription();
-        dfd.setName(getAID());
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("car-selling");
-        sd.setName("JADE-car-trading");
-        dfd.addServices(sd);
         try {
             DFService.register(this, dfd);
         } catch (FIPAException fe) {
@@ -32,15 +27,23 @@ public class CarSellerAgent extends CarMarketAgent {
         }
 
         // Add the behaviour serving queries from buyer agents
-
         addBehaviour(new OfferRequestsServer());
-
         // Add the behaviour serving purchase orders from buyer agents
-
         addBehaviour(new PurchaseOrdersServer());
 
-        Gateway.getInstance().append(this);
+        gui = new CarSellerGui(this);
+        gui.setVisible(true);
+    }
 
+    private DFAgentDescription createDescription() {
+        // Register the car-selling service in the yellow pages
+        DFAgentDescription dfd = new DFAgentDescription();
+        dfd.setName(getAID());
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("car-selling");
+        sd.setName("JADE-car-trading");
+        dfd.addServices(sd);
+        return dfd;
     }
 
     // Put agent clean-up operations here
@@ -57,17 +60,18 @@ public class CarSellerAgent extends CarMarketAgent {
         log("Seller-agent " + getAID().getName() + " terminating.");
     }
 
-    /**
-     * This is invoked by the GUI when the user adds a new car for sale
-     */
-    public void updateCatalogue(final String mileage, final int price) {
-        addBehaviour(new OneShotBehaviour() {
-            public void action() {
-//                Gateway.getInstance().add(myAgent)
-//                catalogue.put(mileage, new Integer(price));
-                log(mileage + " inserted into catalogue. Price = " + price);
-            }
-        });
+    public void updateCatalogue(String mileage, int price) {
+        catalogue.put(mileage, price);
+        gui.render(mapCatalog());
+    }
+
+    private String[][] mapCatalog() {
+        String[][] data = new String[catalogue.size()][];
+        int i = 0;
+        for (Map.Entry entry : catalogue.entrySet()) {
+            data[i++] = new String[]{(String) entry.getKey(), String.valueOf(entry.getValue())};
+        }
+        return data;
     }
 
     /**
@@ -88,8 +92,7 @@ public class CarSellerAgent extends CarMarketAgent {
                 String mileage = msg.getContent();
                 ACLMessage reply = msg.createReply();
 
-                Integer price = null;
-//                Integer price = (Integer) catalogue.get(mileage);
+                Integer price = catalogue.get(mileage);
                 if (price != null) {
                     // The requested car is available for sale. Reply with the price
                     reply.setPerformative(ACLMessage.PROPOSE);
@@ -123,8 +126,7 @@ public class CarSellerAgent extends CarMarketAgent {
                 String mileage = msg.getContent();
                 ACLMessage reply = msg.createReply();
 
-                Integer price = null;
-//                Integer price = (Integer) catalogue.remove(mileage);
+                Integer price = catalogue.remove(mileage);
                 if (price != null) {
                     reply.setPerformative(ACLMessage.INFORM);
                     log(mileage + " sold to agent " + msg.getSender().getName());
@@ -134,6 +136,7 @@ public class CarSellerAgent extends CarMarketAgent {
                     reply.setContent("not-available");
                 }
                 myAgent.send(reply);
+                gui.render(mapCatalog());
             } else {
                 block();
             }

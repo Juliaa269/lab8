@@ -7,37 +7,20 @@ import ua.edu.onu.util.Gateway;
 import ua.edu.onu.util.Status;
 
 public class CarMarketAgent extends Agent {
-    private int milleage;
+    private int mileage;
     private int price;
     private Status status = Status.NEW;
-    private CarMarketAgent dealedWith;
-    protected String agentType;
     protected String color = ConsoleColors.RESET;
+    private String dealAgentName;
+    private int dealAgentPrice;
+    private boolean dealFinished;
 
-    protected void setup(Object[] arguments) {
-        if(arguments == null || arguments.length == 0) {
-            // Make the agent terminate
-            log("No target car mileage specified");
-            doDelete();
-        } else {
-            String[] args = ((String) arguments[0]).split(" ");
-            setMilleage(Integer.parseInt(args[0]));
-            setPrice(Integer.parseInt(args[1]));
-            log("Target car mileage is " + getMilleage());
-            log("Target car price is " + getPrice());
-        }
+    public int getMileage() {
+        return mileage;
     }
 
-    public CarMarketAgent() {
-    }
-
-
-    public int getMilleage() {
-        return milleage;
-    }
-
-    public void setMilleage(int milleage) {
-        this.milleage = milleage;
+    public void setMileage(int mileage) {
+        this.mileage = mileage;
     }
 
     public int getPrice() {
@@ -48,19 +31,11 @@ public class CarMarketAgent extends Agent {
         this.price = price;
     }
 
-    public CarMarketAgent getDealedWith() {
-        return dealedWith;
-    }
-
-    public void setDealedWith(CarMarketAgent dealedWith) {
-        this.dealedWith = dealedWith;
-    }
-
     @Override
     public String toString() {
         return "CarMarketAgent{" +
                 "name=" + getName() +
-                ",milleage=" + milleage +
+                ",milleage=" + mileage +
                 ", price=" + price +
                 '}';
     }
@@ -83,5 +58,24 @@ public class CarMarketAgent extends Agent {
 
     protected void log(String text) {
         System.out.println(this.color + "[" + Gateway.getInstance().getRequestNumber() + "]" + text + ConsoleColors.RESET);
+    }
+
+    @Override
+    public void doDelete() {
+        Gateway.getInstance().deleteAgent(this);
+        super.doDelete();
+    }
+
+    public void closeDeal(String name, int bestPrice){
+        this.dealFinished = true;
+        this.dealAgentName = name;
+        this.dealAgentPrice = bestPrice;
+    }
+    public String getDealDetails() {
+        return String.format("from %s with %d", dealAgentName, dealAgentPrice);
+    }
+
+    public boolean isDealFinished() {
+        return dealFinished;
     }
 }

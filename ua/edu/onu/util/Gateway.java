@@ -1,6 +1,7 @@
 package ua.edu.onu.util;
 
 import ua.edu.onu.agent.CarMarketAgent;
+import ua.edu.onu.agent.CarSellerAgent;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -43,8 +44,8 @@ public class Gateway {
 
         log("for: " + agents);
         for (CarMarketAgent agent : agents) {
-            String localName = agent.getDealedWith() == null ? "NONE" : agent.getDealedWith().getId();
-            data[i++] = new String[]{agent.getId(), String.valueOf(agent.getMilleage()), String.valueOf(agent.getPrice()), agent.getStatus().toString(), localName};
+            String details = agent.isDealFinished() ?  agent.getDealDetails(): "No Deal Yet";
+            data[i++] = new String[]{agent.getId(), String.valueOf(agent.getMileage()), String.valueOf(agent.getPrice()), agent.getStatus().toString(), details};
             log("data[" + (i - 1) + "]: " + data[i - 1][0] + "," + data[i - 1][1] + "," + data[i - 1][2] + "," + data[i - 1][3] + "," + data[i - 1][4]);
         }
 
@@ -53,5 +54,20 @@ public class Gateway {
 
     private void log(String text) {
         System.out.println(ConsoleColors.CYAN + "[" + Gateway.getInstance().getRequestNumber() + "]" + text + ConsoleColors.RESET);
+    }
+
+    public CarMarketAgent getSeller(int mileage) {
+        for(CarMarketAgent agent: agents) {
+            if(agent instanceof CarSellerAgent && agent.getMileage() == mileage) {
+                return agent;
+            }
+        }
+
+        return null;
+    }
+
+    public void deleteAgent(CarMarketAgent agent) {
+        agent.setStatus(Status.TERMINATED);
+        gui.render(getAgents());
     }
 }

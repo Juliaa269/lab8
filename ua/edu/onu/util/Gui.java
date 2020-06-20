@@ -8,14 +8,14 @@ import java.awt.*;
 public class Gui extends JFrame {
 
     private final JPanel mainPanel;
-    public static final String[] HEADER = new String[]{"Seller/Buyer", "Milleage", "Price", "Status", "Dealed with"};
+    public static final String[] HEADER = new String[]{"Buyer", "Milleage", "Price", "Status", "Deal details"};
     private JTable table;
 
     public Gui() throws HeadlessException {
         super("Car Market");
         mainPanel = new JPanel();
         mainPanel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(), "Agents list", TitledBorder.CENTER, TitledBorder.TOP));
+                BorderFactory.createEtchedBorder(), "Buyer agents list", TitledBorder.CENTER, TitledBorder.TOP));
         table = new JTable();
         render(new String[][]{{}});
         mainPanel.add(new JScrollPane(table));

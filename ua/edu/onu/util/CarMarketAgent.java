@@ -19,7 +19,7 @@ public class CarMarketAgent extends Agent {
         } else {
             String[] args = ((String) arguments[0]).split(" ");
             setMilleage(Integer.parseInt(args[0]));
-            setMilleage(Integer.parseInt(args[1]));
+            setPrice(Integer.parseInt(args[1]));
             log("Target car mileage is " + getMilleage());
             log("Target car price is " + getPrice());
         }

@@ -8,9 +8,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-/**
- * @author Giovanni Caire - TILAB
- */
 class CarSellerGui extends JFrame {
     private CarSellerAgent myAgent;
 

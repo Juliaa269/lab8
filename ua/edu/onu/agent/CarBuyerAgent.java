@@ -1,4 +1,4 @@
-package ua.edu.onu.buyers;
+package ua.edu.onu.agent;
 
 import jade.core.AID;
 import jade.core.behaviours.Behaviour;
@@ -9,7 +9,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import ua.edu.onu.util.CarMarketAgent;
+import ua.edu.onu.agent.CarMarketAgent;
 import ua.edu.onu.util.ConsoleColors;
 import ua.edu.onu.util.Gateway;
 

@@ -1,7 +1,10 @@
-package ua.edu.onu.util;
+package ua.edu.onu.agent;
 
 import jade.core.Agent;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import ua.edu.onu.util.ConsoleColors;
+import ua.edu.onu.util.Gateway;
+import ua.edu.onu.util.Status;
 
 public class CarMarketAgent extends Agent {
     private int milleage;

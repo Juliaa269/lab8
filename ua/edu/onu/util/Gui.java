@@ -1,7 +1,5 @@
 package ua.edu.onu.util;
 
-import ua.edu.onu.buyers.CarBuyerAgent;
-
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;

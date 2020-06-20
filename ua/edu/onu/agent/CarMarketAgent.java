@@ -11,9 +11,8 @@ public class CarMarketAgent extends Agent {
     private int price;
     private Status status = Status.NEW;
     protected String color = ConsoleColors.RESET;
-    private String dealAgentName;
-    private int dealAgentPrice;
     private boolean dealFinished;
+    private String dealOffering;
 
     public int getMileage() {
         return mileage;
@@ -29,15 +28,6 @@ public class CarMarketAgent extends Agent {
 
     public void setPrice(int price) {
         this.price = price;
-    }
-
-    @Override
-    public String toString() {
-        return "CarMarketAgent{" +
-                "name=" + getName() +
-                ",milleage=" + mileage +
-                ", price=" + price +
-                '}';
     }
 
     public Status getStatus() {
@@ -66,16 +56,24 @@ public class CarMarketAgent extends Agent {
         super.doDelete();
     }
 
-    public void closeDeal(String name, int bestPrice){
+    public void closeDeal(String offeringId){
         this.dealFinished = true;
-        this.dealAgentName = name;
-        this.dealAgentPrice = bestPrice;
-    }
-    public String getDealDetails() {
-        return String.format("from %s with %d", dealAgentName, dealAgentPrice);
+        this.dealOffering = offeringId;
     }
 
+    public String getDealDetails() {
+        return String.format("%s", this.dealOffering);
+    }
     public boolean isDealFinished() {
         return dealFinished;
+    }
+
+    @Override
+    public String toString() {
+        return "CarMarketAgent{" +
+                "name=" + getName() +
+                ",milleage=" + mileage +
+                ", price=" + price +
+                '}';
     }
 }

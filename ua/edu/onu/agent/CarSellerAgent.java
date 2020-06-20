@@ -7,13 +7,15 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import ua.edu.onu.OfferingStatus;
 import ua.edu.onu.util.ConsoleColors;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
+
+import static ua.edu.onu.util.Sort.OFFERING_COMPARATOR;
 
 public class CarSellerAgent extends CarMarketAgent {
-    private Map<String, Integer> catalogue = new LinkedHashMap<>();
+    private Set<Offering> catalogue = new LinkedHashSet<>();
     private CarSellerGui gui;
 
     protected void setup() {
@@ -61,15 +63,15 @@ public class CarSellerAgent extends CarMarketAgent {
     }
 
     public void updateCatalogue(String mileage, int price) {
-        catalogue.put(mileage, price);
+        catalogue.add(new Offering(mileage, price));
         gui.render(mapCatalog());
     }
 
     private String[][] mapCatalog() {
         String[][] data = new String[catalogue.size()][];
         int i = 0;
-        for (Map.Entry entry : catalogue.entrySet()) {
-            data[i++] = new String[]{(String) entry.getKey(), String.valueOf(entry.getValue())};
+        for (Offering offering : catalogue) {
+            data[i++] = new String[]{offering.getId(), String.valueOf(offering.getMileage()), String.valueOf(offering.getPrice()), offering.getStatus().toString()};
         }
         return data;
     }
@@ -89,14 +91,17 @@ public class CarSellerAgent extends CarMarketAgent {
             ACLMessage msg = myAgent.receive(mt);
             if (msg != null) {
                 // CFP Message received. Process it
-                String mileage = msg.getContent();
+                String[] content = msg.getContent().split(" ");
+                String mileage = content[0];
+                String price = content[1];
                 ACLMessage reply = msg.createReply();
 
-                Integer price = catalogue.get(mileage);
-                if (price != null) {
+                Offering offering = getLowestCarPrice(Integer.parseInt(mileage), Integer.parseInt(price));
+                if (offering != null) {
                     // The requested car is available for sale. Reply with the price
                     reply.setPerformative(ACLMessage.PROPOSE);
-                    reply.setContent(String.valueOf(price.intValue()));
+                    reply.setContent(offering.getId() + " " + offering.getMileage() + " " + offering.getPrice()
+                    );
                 } else {
                     // The requested car is NOT available for sale.
                     reply.setPerformative(ACLMessage.REFUSE);
@@ -108,6 +113,25 @@ public class CarSellerAgent extends CarMarketAgent {
             }
         }
     }  // End of inner class OfferRequestsServer
+
+    /*
+    120, 12
+    100, 15
+    100, 14
+    70, 18
+    30, 26
+     */
+    private Offering getLowestCarPrice(int targetMileage, int targetPrice) {
+        TreeSet<Offering> activeOffering = new TreeSet<>(OFFERING_COMPARATOR);
+        for (Offering offering : catalogue) {
+            if (offering.getStatus().equals(OfferingStatus.NEW)
+                    && offering.getMileage() <= targetMileage
+                    && offering.getPrice() <= targetPrice) {
+                activeOffering.add(offering);
+            }
+        }
+        return activeOffering.size() > 0 ? activeOffering.first() : null;
+    }
 
     /**
      * Inner class PurchaseOrdersServer.
@@ -123,14 +147,18 @@ public class CarSellerAgent extends CarMarketAgent {
             ACLMessage msg = myAgent.receive(mt);
             if (msg != null) {
                 // ACCEPT_PROPOSAL Message received. Process it
-                String mileage = msg.getContent();
+                String id = msg.getContent();
                 ACLMessage reply = msg.createReply();
 
-                Integer price = catalogue.remove(mileage);
-                if (price != null) {
+                Optional<Offering> value = catalogue.stream().filter(e -> e.getId().equals(id)).findFirst();
+                if (value.isPresent()) {
+                    log("accepted offering " + id);
+                    Offering offering = value.get();
+                    offering.setStatus(OfferingStatus.SOLD);
                     reply.setPerformative(ACLMessage.INFORM);
-                    log(mileage + " sold to agent " + msg.getSender().getName());
+                    log(value.get().getId() + " sold to agent " + msg.getSender().getName());
                 } else {
+                    log("canceled offering " + id);
                     // The requested car has been sold to another buyer in the meanwhile .
                     reply.setPerformative(ACLMessage.FAILURE);
                     reply.setContent("not-available");

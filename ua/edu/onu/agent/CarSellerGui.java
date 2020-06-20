@@ -11,7 +11,7 @@ import java.awt.event.WindowEvent;
 class CarSellerGui extends JFrame {
     private CarSellerAgent myAgent;
 
-    public static final String[] HEADER = new String[]{"Mileage", "Price"};
+    public static final String[] HEADER = new String[]{"Id", "Mileage", "Price", "Status"};
     private JTextField mileageField, priceField;
     private JTable table;
 

@@ -10,11 +10,11 @@ import javax.swing.*;
  * @author Giovanni Caire - TILAB
  */
 class CarBuyerGui extends JFrame {
-    private CarSellerAgent myAgent;
+    private lab8.CarBuyerAgent myAgent;
 
     private JTextField mileageField, priceField;
 
-    CarBuyerGui(CarSellerAgent a) {
+    CarBuyerGui(lab8.CarBuyerAgent a) {
         super(a.getLocalName());
 
         myAgent = a;

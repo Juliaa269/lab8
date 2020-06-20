@@ -10,16 +10,26 @@ import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 
+import java.util.Hashtable;
+
 public class CarBuyerAgent extends Agent {
     // The mileage of the car to buy
     private String targetCarMileage;
     // The list of known seller agents
     private AID[] sellerAgents;
+    private Hashtable catalogue;
+    private lab8.CarBuyerGui myGui;
 
     // Put agent initializations here
     protected void setup() {
         // Printout a welcome message
         System.out.println("Hallo! Buyer-agent " + getAID().getName() + " is ready.");
+        // Create the catalogue
+        catalogue = new Hashtable();
+
+        // Create and show the GUI
+        myGui = new lab8.CarBuyerGui(this);
+        myGui.show();
 
         // Get the mileage of the car to buy as a start-up argument
         Object[] args = getArguments();
@@ -64,6 +74,10 @@ public class CarBuyerAgent extends Agent {
     protected void takeDown() {
         // Printout a dismissal message
         System.out.println("Buyer-agent " + getAID().getName() + " terminating.");
+    }
+
+    public void updateCatalogue(String title, int parseInt) {
+
     }
 
     /**

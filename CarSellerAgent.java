@@ -1,21 +1,22 @@
 package lab8;
 
 import jade.core.Agent;
-import jade.core.behaviours.*;
-import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.DFService;
-import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
-import java.util.*;
+import java.util.Hashtable;
 
 public class CarSellerAgent extends Agent {
     // The catalogue of cars for sale (maps the mileage of a car to its price)
     private Hashtable catalogue;
     // The GUI by means of which the user can add books in the catalogue
-    private CarSellerGui myGui;
+    private lab8.CarSellerGui myGui;
 
     // Put agent initializations here
     protected void setup() {
@@ -23,7 +24,7 @@ public class CarSellerAgent extends Agent {
         catalogue = new Hashtable();
 
         // Create and show the GUI
-        myGui = new CarSellerGui(this);
+        myGui = new lab8.CarSellerGui(this);
         myGui.show();
 
         // Register the car-selling service in the yellow pages

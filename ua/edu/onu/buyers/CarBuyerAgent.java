@@ -1,79 +1,60 @@
-package lab8;
+package ua.edu.onu.buyers;
 
-import jade.core.Agent;
 import jade.core.AID;
-import jade.core.behaviours.*;
-import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
-import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import ua.edu.onu.util.CarMarketAgent;
+import ua.edu.onu.util.ConsoleColors;
+import ua.edu.onu.util.Gateway;
 
-import java.util.Hashtable;
-
-public class CarBuyerAgent extends Agent {
-    // The mileage of the car to buy
-    private String targetCarMileage;
-    // The list of known seller agents
+public class CarBuyerAgent extends CarMarketAgent {
     private AID[] sellerAgents;
-    private Hashtable catalogue;
-    private lab8.CarBuyerGui myGui;
 
-    // Put agent initializations here
     protected void setup() {
-        // Printout a welcome message
-        System.out.println("Hallo! Buyer-agent " + getAID().getName() + " is ready.");
-        // Create the catalogue
-        catalogue = new Hashtable();
+        this.color = ConsoleColors.YELLOW;
+        setup(getArguments());
 
-        // Create and show the GUI
-        myGui = new lab8.CarBuyerGui(this);
-        myGui.show();
-
-        // Get the mileage of the car to buy as a start-up argument
-        Object[] args = getArguments();
-        if (args != null && args.length > 0) {
-            targetCarMileage = (String) args[0];
-            System.out.println("Target car mileage is " + targetCarMileage);
-
-            // Add a TickerBehaviour that schedules a request to seller agents every minute
-            addBehaviour(new TickerBehaviour(this, 1099) {
-                protected void onTick() {
-                    System.out.println("Trying to buy " + targetCarMileage);
-                    // Update the list of seller agents
-                    DFAgentDescription template = new DFAgentDescription();
-                    ServiceDescription sd = new ServiceDescription();
-                    sd.setType("car-selling");
-                    template.addServices(sd);
-                    try {
-                        DFAgentDescription[] result = DFService.search(myAgent, template);
-                        System.out.println("Found the following seller agents:");
-                        sellerAgents = new AID[result.length];
-                        for (int i = 0; i < result.length; ++i) {
-                            sellerAgents[i] = result[i].getName();
-                            System.out.println(sellerAgents[i].getName());
-                        }
-                    } catch (FIPAException fe) {
-                        fe.printStackTrace();
+        // Add a TickerBehaviour that schedules a request to seller agents every minute
+        addBehaviour(new TickerBehaviour(this, 1099) {
+            protected void onTick() {
+                log("Trying to buy " + getMilleage());
+                // Update the list of seller agents
+                DFAgentDescription template = new DFAgentDescription();
+                ServiceDescription sd = new ServiceDescription();
+                sd.setType("car-selling");
+                template.addServices(sd);
+                try {
+                    DFAgentDescription[] result = DFService.search(myAgent, template);
+                    log("Found the following seller agents:");
+                    sellerAgents = new AID[result.length];
+                    for (int i = 0; i < result.length; ++i) {
+                        sellerAgents[i] = result[i].getName();
+                        log(sellerAgents[i].getName());
                     }
-
-                    // Perform the request
-                    myAgent.addBehaviour(new RequestPerformer());
+                } catch (FIPAException fe) {
+                    fe.printStackTrace();
                 }
-            });
-        }
-        // else {
-        // Make the agent terminate
-        System.out.println("No target car mileage specified");
-        // doDelete();
-        //  }
+
+                // Perform the request
+                myAgent.addBehaviour(new RequestPerformer());
+            }
+        });
+
+        Gateway.getInstance().append(this);
+
     }
 
     // Put agent clean-up operations here
+
     protected void takeDown() {
         // Printout a dismissal message
-        System.out.println("Buyer-agent " + getAID().getName() + " terminating.");
+        log("Buyer-agent " + getAID().getName() + " terminating.");
     }
 
     public void updateCatalogue(String title, int parseInt) {
@@ -86,6 +67,7 @@ public class CarBuyerAgent extends Agent {
      * agents the target book.
      */
     private class RequestPerformer extends Behaviour {
+
         private AID bestSeller; // The agent who provides the best offer
         private int bestPrice;  // The best offered price
         private int repliesCnt = 0; // The counter of replies from seller agents
@@ -100,7 +82,7 @@ public class CarBuyerAgent extends Agent {
                     for (int i = 0; i < sellerAgents.length; ++i) {
                         cfp.addReceiver(sellerAgents[i]);
                     }
-                    cfp.setContent(targetCarMileage);
+                    cfp.setContent(String.valueOf(getMilleage()));
                     cfp.setConversationId("car-trade");
                     cfp.setReplyWith("cfp" + System.currentTimeMillis()); // Unique value
                     myAgent.send(cfp);
@@ -136,7 +118,7 @@ public class CarBuyerAgent extends Agent {
                     // Send the purchase order to the seller that provided the best offer
                     ACLMessage order = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
                     order.addReceiver(bestSeller);
-                    order.setContent(targetCarMileage);
+                    order.setContent(String.valueOf(getMilleage()));
                     order.setConversationId("car-trade");
                     order.setReplyWith("order" + System.currentTimeMillis());
                     myAgent.send(order);
@@ -152,11 +134,11 @@ public class CarBuyerAgent extends Agent {
                         // Purchase order reply received
                         if (reply.getPerformative() == ACLMessage.INFORM) {
                             // Purchase successful. We can terminate
-                            System.out.println(targetCarMileage + " successfully purchased from agent " + reply.getSender().getName());
-                            System.out.println("Price = " + bestPrice);
+                            log(getMilleage() + " successfully purchased from agent " + reply.getSender().getName());
+                            log("Price = " + bestPrice);
                             myAgent.doDelete();
                         } else {
-                            System.out.println("Attempt failed: requested car already sold.");
+                            log("Attempt failed: requested car already sold.");
                         }
 
                         step = 4;
@@ -169,10 +151,17 @@ public class CarBuyerAgent extends Agent {
 
         public boolean done() {
             if (step == 2 && bestSeller == null) {
-                System.out.println("Attempt failed: " + targetCarMileage + " not available for sale");
+                log("Attempt failed: " + getMilleage() + " not available for sale");
             }
             return ((step == 2 && bestSeller == null) || step == 4);
         }
+
     }  // End of inner class RequestPerformer
+
+    @Override
+    protected String getAgentType() {
+        return "B";
+    }
+
 }
 

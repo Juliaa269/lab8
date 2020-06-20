@@ -1,6 +1,4 @@
-package lab8;
-
-import jade.core.AID;
+package ua.edu.onu.sellers;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -9,12 +7,12 @@ import javax.swing.*;
 /**
  * @author Giovanni Caire - TILAB
  */
-class CarBuyerGui extends JFrame {
-    private lab8.CarBuyerAgent myAgent;
+public class CarSellerGui extends JFrame {
+    private CarSellerAgent myAgent;
 
     private JTextField mileageField, priceField;
 
-    CarBuyerGui(lab8.CarBuyerAgent a) {
+    public CarSellerGui(CarSellerAgent a) {
         super(a.getLocalName());
 
         myAgent = a;
@@ -39,7 +37,7 @@ class CarBuyerGui extends JFrame {
                     mileageField.setText("");
                     priceField.setText("");
                 } catch (Exception e) {
-                    JOptionPane.showMessageDialog(CarBuyerGui.this, "Invalid values. " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(CarSellerGui.this, "Invalid values. " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
